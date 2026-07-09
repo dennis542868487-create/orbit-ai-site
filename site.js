@@ -77,15 +77,35 @@ document.querySelectorAll("[data-count]").forEach((el) => {
 
 const form = document.querySelector("[data-contact-form]");
 if (form) {
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const data = new FormData(form);
-    const name = encodeURIComponent(data.get("name") || "");
-    const packageName = encodeURIComponent(data.get("package") || "");
-    const message = encodeURIComponent(data.get("message") || "");
-    const subject = `Orbit AI website request from ${name}`;
-    const body = `Name: ${name}%0D%0APackage: ${packageName}%0D%0A%0D%0A${message}`;
-    window.location.href = `mailto:orbitai1389@gmail.com?subject=${subject}&body=${body}`;
+    const status = form.querySelector("[data-form-status]");
+    const button = form.querySelector("button[type='submit']");
+    const data = Object.fromEntries(new FormData(form));
+    status.textContent = "Sending request...";
+    status.className = "form-status";
+    button.disabled = true;
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) throw new Error("Form submission failed");
+      form.reset();
+      status.textContent = "Thanks. Your request was submitted to Orbit AI.";
+      status.className = "form-status success";
+    } catch (error) {
+      status.textContent = "Something went wrong. Please try again or contact Orbit AI directly.";
+      status.className = "form-status error";
+    } finally {
+      button.disabled = false;
+    }
   });
 }
 
